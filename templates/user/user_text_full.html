@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catalog</title>
+</head>
+<body>
+
+    <label class="whois">User: {{ user.username }}</label>
+    <br> <button><a href="{% url 'catalog:user_home_page' user.id %}">To home</a></button>
+
+    {% if message %}
+        <div class="message">
+            <h2>{{ message }}</h2>
+        </div>
+    {% endif %}
+
+    <div class="full_text">
+        <h4>{{ text.txt_title }}</h4>
+        <p>{{ text.txt_text }}</p>
+    </div>
+
+</body>
+</html>

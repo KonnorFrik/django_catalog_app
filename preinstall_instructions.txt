@@ -1,0 +1,7 @@
+1.Define a media url and root in django projects settings:
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+2.Add "django.template.context_processors.media" in "TEMPLATES" in django projects settings for upload/download a users files
+
+3.Create a 'media/catalog/any_files/' dir in the same dir, where a 'catalog' app dir
