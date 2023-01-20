@@ -8,6 +8,7 @@ import mimetypes
 
 from django.shortcuts import get_object_or_404, reverse
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.conf import settings
@@ -15,21 +16,25 @@ from django.conf import settings
 
 def create_new_user(username: str, password: str) -> bool:
     try:
-        models.IUser.objects.create_user(username=username, password=password)
+        models.User.objects.create_user(username=username, password=password)
+
     except Exception:
         result = False
+
     else:
         result = True
 
     return result
 
 
-def auth_and_login(request: django.http.HttpRequest, username: str, password: str) -> models.IUser | bool:
+def auth_and_login(request: django.http.HttpRequest, username: str, password: str) -> User | bool:
     try:
         user = authenticate(username=username, password=password)
         login(request=request, user=user)
+
     except AttributeError:
         return False
+
     return user
 
 
@@ -42,7 +47,7 @@ def create_user_note(request: django.http.HttpRequest) -> bool:
         note_description = request.POST.get("note_description")
 
         # create UserNote obj
-        user = get_object_or_404(models.IUser, username=request.user.username)  # Need IUser instance, NOT LazyObj
+        user = get_object_or_404(models.User, username=request.user.username)  # Need User instance, NOT LazyObj
         note_obj = models.UserNote.objects.create(note_title=note_title, note_description=note_description, user=user)
 
         # add AnyFile obj to UserNote obj and save it in db

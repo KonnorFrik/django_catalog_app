@@ -82,7 +82,7 @@ def user_home_page(req: django.http.HttpRequest, pk: int):
     except Exception:
         message = ""
 
-    user = get_object_or_404(models.IUser, pk=pk)
+    user = get_object_or_404(models.User, pk=pk)
     context = {'user': user, 'message': message}
     return render(request=req, template_name="user/home_page.html", context=context)
 
