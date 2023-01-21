@@ -7,7 +7,8 @@ app_name = "catalog"
 urlpatterns = [
     path('', views.index, name='home_page'),
 
-    path("account/registration_login/", views.registration_loin, name="registration_loin"),
+    path("account/login/", views.login, name="login"),
+    path("account/registration/", views.registration, name="registration"),
     path("account/logout/", views.logout_user, name="logout"),
 
     path("id<int:pk>/home/", views.user_home_page, name='user_home_page'),
@@ -24,5 +25,5 @@ urlpatterns = [
     path("id<int:pk>/note/<int:note_id>/delete/", views.delete_user_note, name='delete_user_note'),
     path("id<int:pk>/note/text/<int:text_id>/delete/", views.delete_text_from_note, name='delete_text_from_note'),
 
-    path("test/", views.test_, name="test"),
+    #path("test/", views.test_, name="test"),
 ]

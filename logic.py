@@ -7,7 +7,7 @@ from binaryornot.check import is_binary
 import mimetypes
 
 from django.shortcuts import get_object_or_404, reverse
-from django.contrib.auth import authenticate, login
+from django.contrib import auth
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -27,10 +27,10 @@ def create_new_user(username: str, password: str) -> bool:
     return result
 
 
-def auth_and_login(request: django.http.HttpRequest, username: str, password: str) -> User | bool:
+def login(request: django.http.HttpRequest, username: str, password: str) -> User | bool:
     try:
-        user = authenticate(username=username, password=password)
-        login(request=request, user=user)
+        user = auth.authenticate(username=username, password=password)
+        auth.login(request=request, user=user)
 
     except AttributeError:
         return False
@@ -40,7 +40,6 @@ def auth_and_login(request: django.http.HttpRequest, username: str, password: st
 
 def create_user_note(request: django.http.HttpRequest) -> bool:
     try:
-        # file_form = forms.AnyFileForm(request.POST, request.FILES)
 
         # get params for UserNote obj which create below
         note_title = request.POST.get('note_title')
@@ -50,16 +49,12 @@ def create_user_note(request: django.http.HttpRequest) -> bool:
         user = get_object_or_404(models.User, username=request.user.username)  # Need User instance, NOT LazyObj
         note_obj = models.UserNote.objects.create(note_title=note_title, note_description=note_description, user=user)
 
-        # add AnyFile obj to UserNote obj and save it in db
-        # file_obj = file_form.save()
-        # note_obj.anyfile_set.add(file_obj)
-
-    except Exception as e:
+    except KeyError as e:
 
         try:
             note_obj.delete()
 
-        except Exception:  # NameError, and mb ValueError
+        except Exception as e:  # NameError, and mb ValueError
             return False
 
         return False
@@ -69,58 +64,39 @@ def create_user_note(request: django.http.HttpRequest) -> bool:
 
 
 def add_file_for_note(request: django.http.HttpRequest, note_obj: models.UserNote) -> bool:
-    # print()
-    # print(f"REQ POST: {request.POST}")
-    # print(f"REQ GET: {request.GET}")
-    # print(f"REQ FILES: {request.FILES}")
-    # print()
-
     file_form = forms.AnyFileForm(request.POST, request.FILES)
 
-    if file_form.is_valid():
+    if not file_form.is_valid():
+        return False
 
-        try:
-            file_obj = file_form.save()
+    try:
+        file_obj = file_form.save()
 
-        except Http404:
-            return False
-
-        else:
-            note_obj.anyfile_set.add(file_obj)
-            return True
+    except Http404:
+        return False
 
     else:
-        print()
-        print(f"FORM ERROR: {file_form.errors}")
-        print()
-        return False
+        note_obj.anyfile_set.add(file_obj)
+        return True
 
 
 def add_text_for_note(request: django.http.HttpRequest, note_obj: models.UserNote) -> bool:
     text_form = forms.TextNoteForm(request.POST, request.FILES)
 
-    if text_form.is_valid():
-        title = text_form.data.get('txt_title') or ""
-        text = text_form.data.get('txt_text')
+    if not text_form.is_valid():
+        return False
 
-        try:
-            text_obj = models.TextNote.objects.create(txt_title=title, txt_text=text, user_note=note_obj)
+    title = text_form.data.get('txt_title') or ""
+    text = text_form.data.get('txt_text')
 
-        except Exception as e:
-            # print()
-            # print(f"ERROR in 'add_text_for_note': {e}")
-            # print()
-            return False
+    try:
+        text_obj = models.TextNote.objects.create(txt_title=title, txt_text=text, user_note=note_obj)
 
-        else:
-            # note_obj.anyfile_set.add(text_obj)
-            return True
+    except Exception as e:
+        return False
 
     else:
-        # print()
-        # print(f"FORM ERROR: {text_form.errors}")
-        # print()
-        return False
+        return True
 
 
 def get_download_file_response(file_id: int) -> django.http.HttpResponse | bool:
