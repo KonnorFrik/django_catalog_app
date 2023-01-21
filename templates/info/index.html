@@ -7,6 +7,11 @@
 <body>
     <h1>WELCOME to catalog app</h1>
 
-    <a href="{% url 'catalog:registration_loin' %}">Registration / Loin</a> <br>
+    <h3>Login as:  {% if user %} <label> {{ user.username }} </label> {% else %} <label> Guest </label> {% endif %} </h3>
+
+
+
+    <a href="{% url 'catalog:registration' %}">Registration</a> <br>
+    <a href="{% url 'catalog:login' %}">Login</a> <br>
 </body>
 </html>
