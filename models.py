@@ -6,6 +6,7 @@ from django.utils import timezone
 class UserNote(models.Model):
     note_title = models.CharField(max_length=100)
     note_description = models.CharField(max_length=300, blank=True, default="")
+    #pub_date = models.DateTimeField("upload date", default=timezone.now)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -30,3 +31,7 @@ class TextNote(models.Model):
     pub_date = models.DateTimeField("upload date", default=timezone.now)
 
     user_note = models.ForeignKey(UserNote, on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return self.txt_title
+
