@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Catalog note</title>
 </head>
+
 <body>
 
         <label class="whois">User: {{ user.username }}</label>
@@ -53,7 +55,13 @@
                         <ul>
                             <li>{{ file.title }}</li>
                             <li><a href="{% url 'catalog:download_user_file' user.id file.id %}" >Download</a>
-                                <button><a href="{% url 'catalog:delete_file_from_note' user.id file.id %}">Delete file</a></button>
+
+                                <form action="{% url 'catalog:delete_file_from_note' user.id file.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="submit" value="Delete">
+                                </form>
+
                             </li>
                         </ul>
                     {% endfor %}
@@ -70,6 +78,13 @@
                             <li>{{ text.txt_title }}</li>
                             <li><a href="{% url 'catalog:show_user_text' user.id note.id text.id %}" >Full read</a>
                                 <button><a href="{% url 'catalog:delete_text_from_note' user.id text.id %}">Delete text</a></button>
+
+                                <form action="{% url 'catalog:delete_text_from_note' user.id text.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="_method" value="delete">
+                                    <input type="submit" value="Delete">
+                                </form>
+
                             </li>
                         </ul>
                     {% endfor %}

@@ -90,6 +90,7 @@ def logout_user(request: django.http.HttpRequest):
 def user_home_page(request: django.http.HttpRequest, pk: int):
     try:
         message = request.session['message']
+        request.session['message'] = ""
 
     except Exception:
         message = ""
@@ -131,6 +132,7 @@ def user_note_detail(request: django.http.HttpRequest, pk: int, note_id: int):
 
         try:
             message = request.session['message']
+            request.session['message'] = ""
 
         except KeyError:
             message = ""
@@ -255,6 +257,16 @@ def download_user_file(request: django.http.HttpRequest, pk: int, file_id: int):
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
 def delete_file_from_note(request: django.http.HttpRequest, pk: int, file_id: int):
+    reverse_name = 'catalog:user_home_page'
+
+    if not request.method == "POST":
+        request.session['message'] = "Something wrong with method"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
+    if not request.POST.get("_method", "").lower() == 'delete':
+        request.session['message'] = "Something wrong"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
     try:
         file_obj = models.AnyFile.objects.get(id=file_id)
         note_id = file_obj.user_note.id
@@ -262,7 +274,7 @@ def delete_file_from_note(request: django.http.HttpRequest, pk: int, file_id: in
 
     except Exception:
         request.session['message'] = "Error on delete file"
-        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.pk, )))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk, )))
 
     else:
         return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id,)))
@@ -270,6 +282,16 @@ def delete_file_from_note(request: django.http.HttpRequest, pk: int, file_id: in
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
 def delete_text_from_note(request: django.http.HttpRequest, pk: int, text_id: int):
+    reverse_name = 'catalog:user_home_page'
+
+    if not request.method == "POST":
+        request.session['message'] = "Something wrong with method"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
+    if not request.POST.get("_method", "").lower() == 'delete':
+        request.session['message'] = "Something wrong"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
     try:
         text_obj = models.TextNote.objects.get(id=text_id)
         note_id = text_obj.user_note.id
@@ -277,7 +299,7 @@ def delete_text_from_note(request: django.http.HttpRequest, pk: int, text_id: in
 
     except Exception:
         request.session['message'] = "Error on delete file"
-        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
 
     else:
         return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id,)))
@@ -285,16 +307,26 @@ def delete_text_from_note(request: django.http.HttpRequest, pk: int, text_id: in
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
 def delete_user_note(request: django.http.HttpRequest, pk: int, note_id: int):
+    reverse_name = 'catalog:user_home_page'
+
+    if not request.method == "POST":
+        request.session['message'] = "Something wrong with method"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
+    if not request.POST.get("_method", "").lower() == 'delete':
+        request.session['message'] = "Something wrong"
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+
     try:
         note_obj = get_object_or_404(models.UserNote, id=note_id)
         note_obj.delete()
 
     except Exception:
         request.session['message'] = "Error on delete note"
-        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.id,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     else:
-        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.id,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
 
 #def test_(request: django.http.HttpRequest, filename: str):

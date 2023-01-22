@@ -30,7 +30,13 @@
         <ul>
             {% for note in user.usernote_set.all %}
                 <li><a href="{% url 'catalog:user_note_detail' user.pk note.pk %}">{{ note.note_title }}</a>
-                    <button><a href="{% url 'catalog:delete_user_note' user.id note.id %}">Delete Note</a></button>
+
+                    <form action="{% url 'catalog:delete_user_note' user.id note.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="_method" value="delete">
+                        <input type="submit" value="Delete">
+                    </form>
+
                 </li> <br>
             {% endfor %}
         </ul>
