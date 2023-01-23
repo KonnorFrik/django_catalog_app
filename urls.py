@@ -10,12 +10,11 @@ router.register(r"textnote", drf_views.TextNoteViewSet)
 router.register(r"file", drf_views.AnyFileViewSet, basename='file')
 router.register(r"users", drf_views.UserViewSet, basename='user')
 
-print(f"\n{router.urls}\n")
-
 app_name = "catalog"
 
 urlpatterns = [
-    path('rest/', include(router.urls)),
+    path('rest/', include(router.urls), name=app_name),
+
     path('', views.index, name='home_page'),
 
     path("account/login/", views.login, name="login"),
