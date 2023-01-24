@@ -20,6 +20,14 @@ class UserNoteSerializer(serializers.HyperlinkedModelSerializer):
         view_name='catalog:file-detail',
         source='anyfile_set')
 
+    user = serializers.ReadOnlyField(
+        source='user.username')
+
+    user_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        view_name='catalog:user-detail',
+        source='user')
+
     class Meta:
         model = models.UserNote
         fields = ('id',
@@ -27,13 +35,20 @@ class UserNoteSerializer(serializers.HyperlinkedModelSerializer):
                   'note_description',
                   'url',
                   'text_notes',
-                  'files')
+                  'files',
+                  'user',
+                  'user_url')
 
 
 class TextNoteSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='catalog:textnote-detail',
         read_only=True)
+
+    user_note_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        view_name='catalog:usernote-detail',
+        source='user_note')
 
     class Meta:
         model = models.TextNote
@@ -42,6 +57,7 @@ class TextNoteSerializer(serializers.ModelSerializer):
                   'txt_text',
                   'pub_date',
                   'user_note',
+                  'user_note_url',
                   'url')
 
 
@@ -50,12 +66,18 @@ class AnyFileSerializer(serializers.ModelSerializer):
         view_name='catalog:file-detail',
         read_only=True)
 
+    user_note_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        view_name='catalog:usernote-detail',
+        source='user_note')
+
     class Meta:
         model = models.AnyFile
         fields = ('id',
                   'title',
                   'pub_date',
                   'user_note',
+                  'user_note_url',
                   'url')
 
 
