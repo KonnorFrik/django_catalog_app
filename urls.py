@@ -24,6 +24,7 @@ urlpatterns = [
     path("id<int:pk>/note/file/<int:file_id>/delete/", views.delete_file_from_note, name='delete_file_from_note'),
     path("id<int:pk>/note/<int:note_id>/delete/", views.delete_user_note, name='delete_user_note'),
     path("id<int:pk>/note/text/<int:text_id>/delete/", views.delete_text_from_note, name='delete_text_from_note'),
+    path("id<int:pk>/note/text/<int:text_id>/edit/", views.update_user_textnote, name='edit_text_from_note'),
 
     #path("test/", views.test_, name="test"),
 ]

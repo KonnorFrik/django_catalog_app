@@ -77,12 +77,15 @@
                         <ul>
                             <li>{{ text.txt_title }}</li>
                             <li><a href="{% url 'catalog:show_user_text' user.id note.id text.id %}" >Full read</a>
-                                <button><a href="{% url 'catalog:delete_text_from_note' user.id text.id %}">Delete text</a></button>
 
                                 <form action="{% url 'catalog:delete_text_from_note' user.id text.id %}" method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="_method" value="delete">
                                     <input type="submit" value="Delete">
+                                </form>
+
+                                <form action="{% url 'catalog:edit_text_from_note' user.id text.id %}" method="get">
+                                    <input type="submit" value="Update">
                                 </form>
 
                             </li>

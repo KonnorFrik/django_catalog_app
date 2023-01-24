@@ -329,6 +329,21 @@ def delete_user_note(request: django.http.HttpRequest, pk: int, note_id: int):
         return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
 
+@login_required(redirect_field_name="", login_url="/catalog/account/login/")
+def update_user_textnote(request: django.http.HttpRequest, pk: int, text_id: int):
+    if request.method == "GET":
+        text_obj = get_object_or_404(models.TextNote, id=text_id)
+
+        print(f"\nobj: {text_obj}\n")
+
+        text_form = forms.TextNoteForm(text_obj)
+
+        #print(f"\nForm: {text_form}\n")
+        print(f"\nForm type: {type(text_form)}\n")
+
+        context = {"form": text_form, 'user': request.user, 'message': "Edit you'r note"}
+        return render(request=request, template_name='file/edit_text_for_note.html', context=context)
+
 #def test_(request: django.http.HttpRequest, filename: str):
 #
     #try:
