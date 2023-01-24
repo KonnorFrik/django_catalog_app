@@ -1,10 +1,20 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from . import drf_views
 
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r"usernote", drf_views.UserNoteViewSet, basename='usernote')
+router.register(r"textnote", drf_views.TextNoteViewSet)
+router.register(r"file", drf_views.AnyFileViewSet, basename='file')
+router.register(r"users", drf_views.UserViewSet, basename='user')
 
 app_name = "catalog"
 
 urlpatterns = [
+    path('rest/', include(router.urls), name=app_name),
+
     path('', views.index, name='home_page'),
 
     path("account/login/", views.login, name="login"),
