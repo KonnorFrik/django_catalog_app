@@ -1,5 +1,5 @@
 import django.http
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, reverse, get_object_or_404
 from django.contrib.auth import logout  # , login, authenticate
 from django.contrib import auth
@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required  # ,  permission_requi
 # from django.views import generic
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
+from . import serializers
 from . import forms
 from . import models
 from . import logic
@@ -14,7 +15,7 @@ from . import logic
 
 def index(request: django.http.HttpRequest):
     try:
-        user = get_object_or_404(auth.models.User, pk=request.user.pk)
+        user = get_object_or_404(auth.models.User, id=request.user.id)
 
     except django.http.Http404:
         user = None
@@ -46,7 +47,7 @@ def login(request: django.http.HttpRequest):
         context = {"form": form, 'message': "Can not login. Try again"}
         return render(request=request, template_name=login_html_template, context=context)
 
-    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(user.pk,)))  # GOOD
+    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(user.id,)))  # GOOD
 
 
 def registration(request: django.http.HttpRequest):
@@ -77,7 +78,7 @@ def registration(request: django.http.HttpRequest):
         context = {"form": form, 'message': "Can not to auto login\nTry again"}
         return render(request=request, template_name=template_name, context=context)
 
-    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(user.pk,)))  # GOOD
+    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(user.id,)))  # GOOD
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
@@ -87,7 +88,7 @@ def logout_user(request: django.http.HttpRequest):
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def user_home_page(request: django.http.HttpRequest, pk: int):
+def user_home_page(request: django.http.HttpRequest, user_id: int):
     try:
         message = request.session['message']
         request.session['message'] = ""
@@ -95,40 +96,40 @@ def user_home_page(request: django.http.HttpRequest, pk: int):
     except Exception:
         message = ""
 
-    user = get_object_or_404(models.User, pk=pk)
+    user = get_object_or_404(models.User, id=user_id)
     context = {'user': user, 'message': message}
     return render(request=request, template_name="user/home_page.html", context=context)
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def add_user_content(request: django.http.HttpRequest, pk: int):
+def add_user_content(request: django.http.HttpRequest, user_id: int):
     template_name = "file/add_user_content.html"
 
     if not request.method == "POST":
         form = forms.UserNoteForm()
-        context = {'form': form, 'id': pk}
+        context = {'form': form, 'id': user_id}
         return render(request=request, template_name=template_name, context=context)
 
     form = forms.UserNoteForm(request.POST)
 
     if not form.is_valid():
-        context = {'form': form, 'id': pk, 'message': "Invalid form"}
+        context = {'form': form, 'id': user_id, 'message': "Invalid form"}
         return render(request=request, template_name=template_name, context=context)
 
     if not logic.create_user_note(request=request):
-        context = {'form': form, 'id': pk, 'message': "Unknown error. Please try again"}
+        context = {'form': form, 'id': user_id, 'message': "Unknown error. Please try again"}
         return render(request=request, template_name=template_name, context=context)
 
-    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.pk,)))
+    return HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.id,)))
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def user_note_detail(request: django.http.HttpRequest, pk: int, note_id: int):
+def user_note_detail(request: django.http.HttpRequest, user_id: int, note_id: int):
     template_name = "user/user_note_detail.html"
 
     try:
         user = request.user
-        user_note = get_object_or_404(models.UserNote, pk=note_id)
+        user_note = get_object_or_404(models.UserNote, id=note_id)
 
         try:
             message = request.session['message']
@@ -148,13 +149,13 @@ def user_note_detail(request: django.http.HttpRequest, pk: int, note_id: int):
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def add_file_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
+def add_file_for_note(request: django.http.HttpRequest, user_id: int, note_id: int):
     template_name = "file/add_file_for_note.html"
 
     if not request.method == "POST":
         try:
             user = request.user
-            user_note = get_object_or_404(models.UserNote, pk=note_id)
+            user_note = get_object_or_404(models.UserNote, id=note_id)
             form = forms.AnyFileForm()
 
         except django.http.Http404:
@@ -169,7 +170,7 @@ def add_file_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
             return render(request=request, template_name=template_name, context=contex)
 
     try:
-        user_note = get_object_or_404(models.UserNote, pk=note_id)
+        user_note = get_object_or_404(models.UserNote, id=note_id)
 
     except (ObjectDoesNotExist, MultipleObjectsReturned):
         message = "Unknown error :c"
@@ -186,16 +187,16 @@ def add_file_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
             context = {'note': user_note, 'form': form, 'user': user, 'message': message}
             return render(request=request, template_name=template_name, context=context)
 
-        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id)))  # GOOD
+        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.id, note_id)))  # GOOD
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def add_text_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
+def add_text_for_note(request: django.http.HttpRequest, user_id: int, note_id: int):
     template_name = "file/add_text_for_note.html"
 
     if not request.method == "POST":
         try:
-            user_note = get_object_or_404(models.UserNote, pk=note_id)
+            user_note = get_object_or_404(models.UserNote, id=note_id)
             form = forms.TextNoteForm()
 
         except django.http.Http404:
@@ -209,7 +210,7 @@ def add_text_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
             return render(request=request, template_name=template_name, context=context)
 
     try:
-        user_note = get_object_or_404(models.UserNote, pk=note_id)
+        user_note = get_object_or_404(models.UserNote, id=note_id)
 
     except (ObjectDoesNotExist, MultipleObjectsReturned):
         message = "Unknown error :c"
@@ -226,11 +227,11 @@ def add_text_for_note(request: django.http.HttpRequest, pk: int, note_id: int):
             context = {'note': user_note, 'form': form, 'user': user, 'message': message}
             return render(request=request, template_name=template_name, context=context)
 
-        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id)))  # GOOD
+        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.id, note_id)))  # GOOD
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def show_user_text(request: django.http.HttpRequest, pk: int, note_id: int, text_id: int):
+def show_user_text(request: django.http.HttpRequest, user_id: int, note_id: int, text_id: int):
     try:
         text_obj = get_object_or_404(models.TextNote, id=text_id)
 
@@ -238,7 +239,7 @@ def show_user_text(request: django.http.HttpRequest, pk: int, note_id: int, text
         message = "Unknown Error :c"
         # context = {'user': request.user, 'message': message, }
         request.session['message'] = message
-        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id)))
+        return HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.id, note_id)))
 
     else:
         context = {'user': request.user, 'text': text_obj}
@@ -246,76 +247,76 @@ def show_user_text(request: django.http.HttpRequest, pk: int, note_id: int, text
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def download_user_file(request: django.http.HttpRequest, pk: int, file_id: int):
+def download_user_file(request: django.http.HttpRequest, user_id: int, file_id: int):
     response = logic.get_download_file_response(file_id=file_id)
 
     if not response :
-        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse('catalog:user_home_page', args=(request.user.id,)))
 
     return response
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def delete_file_from_note(request: django.http.HttpRequest, pk: int, file_id: int):
+def delete_file_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, file_id: int):
     reverse_name = 'catalog:user_home_page'
 
     if not request.method == "POST":
         request.session['message'] = "Something wrong with method"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     if not request.POST.get("_method", "").lower() == 'delete':
         request.session['message'] = "Something wrong"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     try:
         file_obj = models.AnyFile.objects.get(id=file_id)
-        note_id = file_obj.user_note.id
+        #note_id = file_obj.user_note.id
         file_obj.delete()
 
     except Exception:
         request.session['message'] = "Error on delete file"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk, )))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id, )))
 
     else:
-        return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id,)))
+        return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.id, note_id,)))
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def delete_text_from_note(request: django.http.HttpRequest, pk: int, text_id: int):
+def delete_text_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, text_id: int):
     reverse_name = 'catalog:user_home_page'
 
     if not request.method == "POST":
         request.session['message'] = "Something wrong with method"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     if not request.POST.get("_method", "").lower() == 'delete':
         request.session['message'] = "Something wrong"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     try:
         text_obj = models.TextNote.objects.get(id=text_id)
-        note_id = text_obj.user_note.id
+        #note_id = text_obj.user_note.id
         text_obj.delete()
 
     except Exception:
         request.session['message'] = "Error on delete file"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     else:
-        return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.pk, note_id,)))
+        return django.http.HttpResponseRedirect(reverse('catalog:user_note_detail', args=(request.user.id, note_id,)))
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def delete_user_note(request: django.http.HttpRequest, pk: int, note_id: int):
+def delete_user_note(request: django.http.HttpRequest, user_id: int, note_id: int):
     reverse_name = 'catalog:user_home_page'
 
     if not request.method == "POST":
         request.session['message'] = "Something wrong with method"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     if not request.POST.get("_method", "").lower() == 'delete':
         request.session['message'] = "Something wrong"
-        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.pk,)))
+        return django.http.HttpResponseRedirect(reverse(reverse_name, args=(request.user.id,)))
 
     try:
         note_obj = get_object_or_404(models.UserNote, id=note_id)
@@ -330,19 +331,76 @@ def delete_user_note(request: django.http.HttpRequest, pk: int, note_id: int):
 
 
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
-def update_user_textnote(request: django.http.HttpRequest, pk: int, text_id: int):
+def edit_text_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, text_id: int):
+    try:
+        text_note_obj = get_object_or_404(models.TextNote, id=text_id)
+
+    except models.TextNote.DoesNotExist:
+        return HttpResponse(status=404)
+
     if request.method == "GET":
-        text_obj = get_object_or_404(models.TextNote, id=text_id)
+        try:
+            message = request.session['message']
+            request.session['message'] = ""
 
-        print(f"\nobj: {text_obj}\n")
+        except Exception:
+            message = ""
 
-        text_form = forms.TextNoteForm(text_obj)
+        serialized_text_obj = serializers.TextNoteSerializer(text_note_obj, context={'request': request})
 
-        #print(f"\nForm: {text_form}\n")
-        print(f"\nForm type: {type(text_form)}\n")
+        text_form = forms.TextNoteForm(serialized_text_obj.data)
 
-        context = {"form": text_form, 'user': request.user, 'message': "Edit you'r note"}
+        context = {"form": text_form, 'user': request.user, 'message': message or "Edit you'r note"}
         return render(request=request, template_name='file/edit_text_for_note.html', context=context)
+
+    if not request.POST.get("_method", "").lower() == 'put':
+        request.session['message'] = "Something wrong"
+        return django.http.HttpResponseRedirect(reverse('catalog:edit_text_from_note', args=(request.user.id, note_id, text_id)))
+
+    serialized_obj = serializers.TextNoteSerializer(text_note_obj, data=request.POST)
+
+    if serialized_obj.is_valid():
+        serialized_obj.save()
+        return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id)))
+
+
+@login_required(redirect_field_name="", login_url="/catalog/account/login/")
+def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, file_id: int):
+    try:
+        file_note_obj = get_object_or_404(models.AnyFile, id=file_id)
+
+    except models.AnyFile.DoesNotExist:
+        return HttpResponse(status=404)
+
+
+    if request.method == "GET":
+        try:
+            message = request.session['message']
+            request.session['message'] = ""
+
+        except Exception:
+            message = ""
+
+        serialized_file_obj = serializers.AnyFileSerializer(file_note_obj, context={'request': request})
+
+        #print(f"\n{serialized_file_obj.data}\n")
+
+        file_form = forms.AnyFileForm(serialized_file_obj.data)
+
+        context = {"form": file_form, 'user': request.user, 'message': message or "Edit you'r file"}
+        return render(request=request, template_name='file/edit_file_for_note.html', context=context)
+
+    if not request.POST.get("_method", "").lower() == 'put':
+        request.session['message'] = "Something wrong"
+        return django.http.HttpResponseRedirect(reverse('catalog:edit_file_from_note', args=(request.user.id, note_id, file_id)))
+
+    serialized_obj = serializers.AnyFileSerializer(file_note_obj, data=request.POST)
+
+    if serialized_obj.is_valid():
+        serialized_obj.save()
+        print("\nSAVED, go to detail page\n")
+        return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id)))
+
 
 #def test_(request: django.http.HttpRequest, filename: str):
 #
