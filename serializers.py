@@ -37,6 +37,7 @@ class UserNoteSerializer(serializers.HyperlinkedModelSerializer):
                   'text_notes',
                   'files',
                   'user',
+                  'pub_date',
                   'user_url')
 
 
