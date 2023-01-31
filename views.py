@@ -148,6 +148,7 @@ def user_note_detail(request: django.http.HttpRequest, user_id: int, note_id: in
         return render(request=request, template_name=template_name, context=contex)
 
 
+# TODO refactor this
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
 def add_file_for_note(request: django.http.HttpRequest, user_id: int, note_id: int):
     template_name = "file/add_file_for_note.html"
