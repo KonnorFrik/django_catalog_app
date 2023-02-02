@@ -19,6 +19,12 @@ class AnyFileForm(forms.ModelForm):
         fields = ['title', 'file']
 
 
+class AnyFileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = models.AnyFile
+        fields = ['title']
+
+
 class TextNoteForm(forms.Form):
     txt_title = forms.CharField(label="Title", max_length=25, required=True, validators=[validators.text_note_form_title_validation])
     txt_text = forms.CharField(label='Text', max_length=250, help_text="Maximum 250 symbols", widget=forms.Textarea)

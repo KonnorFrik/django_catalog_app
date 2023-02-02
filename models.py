@@ -19,7 +19,7 @@ class AnyFile(models.Model):
     file = models.FileField(upload_to="catalog/any_files/")
     pub_date = models.DateTimeField("upload date", default=timezone.now)
 
-    user_note = models.ForeignKey(UserNote, on_delete=models.CASCADE)
+    user_note = models.ForeignKey(UserNote, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.title

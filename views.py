@@ -335,8 +335,10 @@ def delete_user_note(request: django.http.HttpRequest, user_id: int, note_id: in
 def edit_text_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, text_id: int):
     try:
         text_note_obj = get_object_or_404(models.TextNote, id=text_id)
+        user_note = get_object_or_404(models.UserNote, id=note_id)
 
-    except models.TextNote.DoesNotExist:
+    #except (models.TextNote.DoesNotExist, models.UserNote.DoesNotExist):
+    except django.http.Http404:
         return HttpResponse(status=404)
 
     if request.method == "GET":
@@ -362,9 +364,16 @@ def edit_text_from_note(request: django.http.HttpRequest, user_id: int, note_id:
 
     if serialized_obj.is_valid():
         serialized_obj.save()
-        return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id)))
+        return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id))) # GOOD
+
+    print(f"\n{serialized_obj.errors}\n")
+    print(f"\n{request.POST}\n")
+
+    request.session["message"] = "Invalid data"
+    return HttpResponseRedirect(reverse("catalog:edit_text_from_note", args=(request.user.id, note_id, text_id)))
 
 
+# refactor this (try-except for message separete to logic.py)
 @login_required(redirect_field_name="", login_url="/catalog/account/login/")
 def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, file_id: int):
     try:
@@ -386,7 +395,7 @@ def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id:
 
         #print(f"\n{serialized_file_obj.data}\n")
 
-        file_form = forms.AnyFileForm(serialized_file_obj.data)
+        file_form = forms.AnyFileUpdateForm(serialized_file_obj.data)
 
         context = {"form": file_form, 'user': request.user, 'message': message or "Edit you'r file"}
         return render(request=request, template_name='file/edit_file_for_note.html', context=context)
@@ -401,6 +410,9 @@ def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id:
         serialized_obj.save()
         print("\nSAVED, go to detail page\n")
         return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id)))
+
+    request.session["message"] = "Invalid data"
+    return HttpResponseRedirect(reverse("catalog:edit_text_from_note", args=(request.user.id, note_id, text_id)))
 
 
 #def test_(request: django.http.HttpRequest, filename: str):
