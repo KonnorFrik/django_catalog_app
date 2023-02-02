@@ -29,7 +29,7 @@
         {% if user.usernote_set.all %}
         <ul>
             {% for note in user.usernote_set.all %}
-                <li><a href="{% url 'catalog:user_note_detail' user.pk note.pk %}">{{ note.note_title }}</a>
+                <li><a href="{% url 'catalog:user_note_detail' user.pk note.pk %}">{{ note.note_title }}</a> | {{ note.pub_date }}
                     <p> {{ note.note_description }} </p> 
 
                     <form action="{% url 'catalog:delete_user_note' user.id note.id %}" method="post">
