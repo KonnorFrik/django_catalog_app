@@ -335,7 +335,7 @@ def delete_user_note(request: django.http.HttpRequest, user_id: int, note_id: in
 def edit_text_from_note(request: django.http.HttpRequest, user_id: int, note_id: int, text_id: int):
     try:
         text_note_obj = get_object_or_404(models.TextNote, id=text_id)
-        user_note = get_object_or_404(models.UserNote, id=note_id)
+        #user_note = get_object_or_404(models.UserNote, id=note_id)
 
     #except (models.TextNote.DoesNotExist, models.UserNote.DoesNotExist):
     except django.http.Http404:
@@ -360,14 +360,22 @@ def edit_text_from_note(request: django.http.HttpRequest, user_id: int, note_id:
         request.session['message'] = "Something wrong"
         return django.http.HttpResponseRedirect(reverse('catalog:edit_text_from_note', args=(request.user.id, note_id, text_id)))
 
-    serialized_obj = serializers.TextNoteSerializer(text_note_obj, data=request.POST)
+    data = {"txt_title": request.POST["txt_title"],
+            "txt_text": request.POST["txt_text"],
+            "user_note": text_note_obj.user_note_id,
+            }
+
+
+    #print(f"\nREQ POST: {request.POST}\n")
+    print(f"\n{type(data)}, {data}\n")
+    serialized_obj = serializers.TextNoteSerializer(text_note_obj, data=data)
 
     if serialized_obj.is_valid():
         serialized_obj.save()
         return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id))) # GOOD
 
     print(f"\n{serialized_obj.errors}\n")
-    print(f"\n{request.POST}\n")
+    #print(f"\n{request.POST}\n")
 
     request.session["message"] = "Invalid data"
     return HttpResponseRedirect(reverse("catalog:edit_text_from_note", args=(request.user.id, note_id, text_id)))
@@ -393,8 +401,6 @@ def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id:
 
         serialized_file_obj = serializers.AnyFileSerializer(file_note_obj, context={'request': request})
 
-        #print(f"\n{serialized_file_obj.data}\n")
-
         file_form = forms.AnyFileUpdateForm(serialized_file_obj.data)
 
         context = {"form": file_form, 'user': request.user, 'message': message or "Edit you'r file"}
@@ -404,11 +410,12 @@ def edit_file_from_note(request: django.http.HttpRequest, user_id: int, note_id:
         request.session['message'] = "Something wrong"
         return django.http.HttpResponseRedirect(reverse('catalog:edit_file_from_note', args=(request.user.id, note_id, file_id)))
 
+
     serialized_obj = serializers.AnyFileSerializer(file_note_obj, data=request.POST)
 
     if serialized_obj.is_valid():
         serialized_obj.save()
-        print("\nSAVED, go to detail page\n")
+        #print("\nSAVED, go to detail page\n")
         return HttpResponseRedirect(reverse("catalog:user_note_detail", args=(request.user.id, note_id)))
 
     request.session["message"] = "Invalid data"
