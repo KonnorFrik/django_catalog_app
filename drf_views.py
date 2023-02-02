@@ -22,19 +22,8 @@ class UserNoteViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.UserNoteSerializer
     permission_classes = [permissions.IsAuthenticated, my_permissions.IsOwner]
 
-    #def create(self, request):
-        ## get user by name
-        #request.data['user'] = request.user
-        #serialized_data = serializers.UserNoteSerializer(data=request.data, context={'request': request})
-        #print(f"\nREQ: {request.data}")
-        #print(f"USER: {request.user}")
-        #print(f"USER ID: {request.user.id}")
-#
-        #if serialized_data.is_valid():
-            #serialized_data.save()
-#
-        #return Response(serialized_data.data, status=status.HTTP_201_CREATED)
-        #print()
+    def get_queryset(self):
+        return models.UserNote.objects.all().filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -43,16 +32,16 @@ class UserNoteViewSet(viewsets.ModelViewSet):
 class TextNoteViewSet(viewsets.ModelViewSet):
     queryset = models.TextNote.objects.all()
     serializer_class = serializers.TextNoteSerializer
-    permission_classes = [permissions.IsAuthenticated, my_permissions.IsOwner]
+    permission_classes = [permissions.IsAuthenticated, my_permissions.AllowAnyNotList]
 
 
 class AnyFileViewSet(viewsets.ModelViewSet):
     queryset = models.AnyFile.objects.all()
     serializer_class = serializers.AnyFileSerializer
-    permission_classes = [permissions.IsAuthenticated, my_permissions.IsOwner]
+    permission_classes = [permissions.IsAuthenticated, my_permissions.AllowAnyNotList]
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
-    permission_classes = [permissions.IsAuthenticated, my_permissions.IsOwner]
+    permission_classes = [permissions.IsAuthenticated]
