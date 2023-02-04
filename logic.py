@@ -14,21 +14,27 @@ from django.http import Http404
 from django.conf import settings
 
 
-def create_new_user(username: str, password: str) -> bool:
+def create_new_user(request: django.http.HttpRequest) -> bool:
     try:
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         models.User.objects.create_user(username=username, password=password)
 
     except Exception:
-        result = False
+        status = False
 
     else:
-        result = True
+        status = True
 
-    return result
+    return status, username, password
 
 
-def login(request: django.http.HttpRequest, username: str, password: str) -> User | bool:
+def login(request: django.http.HttpRequest):#, username: str, password: str) -> User | bool:
     try:
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         user = auth.authenticate(username=username, password=password)
         auth.login(request=request, user=user)
 
@@ -42,24 +48,23 @@ def create_user_note(request: django.http.HttpRequest) -> bool:
     try:
 
         # get params for UserNote obj which create below
-        note_title = request.POST.get('note_title')
-        note_description = request.POST.get("note_description")
-
-        # create UserNote obj
-        user = get_object_or_404(models.User, username=request.user.username)  # Need User instance, NOT LazyObj
-        note_obj = models.UserNote.objects.create(note_title=note_title, note_description=note_description, user=user)
+        note_title = request.POST.get("note_title", "")
+        note_description = request.POST.get("note_description", "")
 
     except KeyError as e:
 
-        try:
-            note_obj.delete()
-
-        except Exception as e:  # NameError, and mb ValueError
-            return False
+        #try:
+            #note_obj.delete()
+#
+        #except Exception as e:  # NameError, and mb ValueError
+            #return False
 
         return False
 
     else:
+        # create UserNote obj
+        user = get_object_or_404(models.User, id=request.user.id)
+        note_obj = models.UserNote.objects.create(note_title=note_title, note_description=note_description, user=user)
         return True
 
 
@@ -132,3 +137,26 @@ def get_download_file_response(file_id: int) -> django.http.HttpResponse | bool:
         response['Content-Disposition'] = f"attachment; filename={file_obj.title + file_ext}"
         return response
 
+
+def get_message(request: django.http.HttpRequest, default: str = None) -> str:
+    message = request.session.get("message", default or "")
+    request.session["message"] = ""
+    return message
+
+
+def get_serialized_form(obj_id: int, form_cls, serializer_cls, model, request: django.http.HttpRequest):
+    obj = get_object_or_404(model, id=obj_id)
+    serialized_obj = serializer_cls(obj, context={"request": request})
+    form = form_cls(serialized_obj.data)
+
+    return form
+
+def edit_obj(obj_id: int, serializer_cls, model, data: dict) -> bool:
+    obj = get_object_or_404(model, id=obj_id)
+    serialized_obj = serializer_cls(obj, data=data)
+
+    if serialized_obj.is_valid():
+        serialized_obj.save()
+        return True
+
+    return False
